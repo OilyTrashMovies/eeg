@@ -13,7 +13,7 @@
             overflow: hidden;
             font-family: 'Courier New', Courier, monospace;
         }
-        .scifi-font, .scifi-font #logo, .scifi-font #vitals, .scifi-font #timestamp, .scifi-font #patientInfo {
+        .scifi-font, .scifi-font #logo, .scifi-font #vitals, .scifi-font #neuralStatus, .scifi-font {
             font-family: 'Orbitron', sans-serif;
             text-shadow: 0 0 5px #00ff00;
         }
@@ -35,19 +35,13 @@
             color: green;
             font-size: 16px;
         }
-        #timestamp {
+        #neuralStatus {
             position: absolute;
             top: 20px;
             right: 20px;
             color: green;
-            font-size: 16px;
-        }
-        #patientInfo {
-            position: absolute;
-            top: 80px;
-            left: 20px;
-            color: green;
-            font-size: 16px;
+            font-size: 14px;
+			text-align: right;
         }
         #hrGraph {
             vertical-align: middle;
@@ -57,13 +51,27 @@
 <body>
     <div id="logo">REWIND INDUSTRIES</div>
     <div id="vitals">
+		<div>PATIENT ID: OTM-2077</div>
+        <div>NAME: A. ALVAREZ</div>
         <div>HR: <span id="heartRate">72</span> bpm <canvas id="hrGraph" width="50" height="20"></canvas></div>
         <div>BP: <span id="bloodPressure">120/80</span> mmHg</div>
+		<div>O2: 98%</div>
     </div>
-    <div id="timestamp"><span id="time">00:00:00</span></div>
-    <div id="patientInfo">
-        <div>PATIENT ID: RW-2077</div>
-        <div>NAME: A. ALVAREZ</div>
+    <div id="neuralStatus">
+        <div>Neural Quantum Sync:</div>
+        <div>Stable</div>
+        <div>Crystal Interval Frequency:</div>
+        <div>528 Hz</div>
+        <div>Synaptic Resonance:</div>
+        <div>Optimal</div>
+        <div>Rewind Flux Capacitance:</div>
+        <div>Nominal</div>
+        <div>Neuroplasticity Index:</div>
+        <div>87%</div>
+		<div>Cherinkov Noise:</div>
+        <div>0.23%</div>
+		<div>Chronographic Interference:</div>
+        <div>Low</div>
     </div>
     <canvas id="eegCanvas" width="800" height="600"></canvas>
     <script>
@@ -73,8 +81,7 @@
         const ENABLE_COLORED_CHANNELS = true;
         const ENABLE_GLOW_EFFECT = true;
         const ENABLE_DYNAMIC_GRID = true;
-        const ENABLE_TIMESTAMP = true;
-        const ENABLE_PATIENT_INFO = true;
+        const ENABLE_TIMESTAMP = false;
         const ENABLE_FREQUENT_VITALS = true;
         const ENABLE_HR_GRAPH = true;
         const ENABLE_SCIFI_FONT = true;
@@ -87,10 +94,7 @@
 
         // Hide elements if not enabled
         if (!ENABLE_TIMESTAMP) {
-            document.getElementById('timestamp').style.display = 'none';
-        }
-        if (!ENABLE_PATIENT_INFO) {
-            document.getElementById('patientInfo').style.display = 'none';
+            document.getElementById('neuralStatus').style.display = 'block';
         }
         if (!ENABLE_HR_GRAPH) {
             document.getElementById('hrGraph').style.display = 'none';
@@ -287,12 +291,6 @@
                 updateVitals();
                 const interval = ENABLE_FREQUENT_VITALS ? Math.random() * 1 + 1 : Math.random() * 2 + 2;
                 nextVitalUpdate = t + interval;
-            }
-
-            // Update timestamp if enabled
-            if (ENABLE_TIMESTAMP) {
-                const now = new Date();
-                document.getElementById('time').textContent = now.toLocaleTimeString();
             }
 
             t += delta_t; // Increment time
