@@ -133,10 +133,9 @@
         }
 
         let t = 0;
-        const delta_t = 1 / 60;
+        const delta_t = 1 / 120;
         const scale = 40;
-        const pixelsPerSecond = 100; // Controls scrolling speed (pixels per second)
-
+        
         // Randomness parameters
         const random_duration = ENABLE_ENHANCED_BURSTS ? 0.2 : 0.15;
         let next_random_start = Math.random() * 1.5 + 0.5;
