@@ -130,9 +130,6 @@
             channelData[i] = new Array(W).fill(0);
         }
 
-        // Add currentIndex for circular buffer
-        let currentIndex = 0;
-
         let t = 0;
         const delta_t = 1 / 60; // Time step per frame (assuming ~60 fps)
         const scale = 40; // Scaling factor for signal amplitude
@@ -259,8 +256,7 @@
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
                 for (let x = 0; x < W; x++) {
-                    const dataIndex = (currentIndex + x) % W;
-                    const y_data = channelData[channel][dataIndex];
+                    const y_data = channelData[channel][x];
                     const y_canvas = midline - y_data * scale;
                     if (x === 0) {
                         ctx.moveTo(x, y_canvas);
@@ -288,17 +284,17 @@
                 next_random_start = t + next_interval;
             }
 
-            // Update signal data with circular buffer
+            // Update signal data
             for (let channel = 0; channel < N; channel++) {
+                channelData[channel].shift(); // Remove oldest data point
                 let y = getY(channel, t);
                 // Add constant background noise
                 y += (Math.random() - 0.5) * base_noise_level;
                 if (is_random_active) {
                     y += (Math.random() - 0.5) * burst_noise_level; // Add burst noise
                 }
-                channelData[channel][currentIndex] = y;
+                channelData[channel].push(y); // Add new data point
             }
-            currentIndex = (currentIndex + 1) % W;
 
             // Update grid offset if dynamic grid is enabled
             if (ENABLE_DYNAMIC_GRID) {
