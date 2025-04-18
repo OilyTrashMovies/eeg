@@ -41,7 +41,7 @@
             right: 20px;
             color: green;
             font-size: 14px;
-			text-align: right;
+            text-align: right;
         }
         #hrGraph {
             vertical-align: middle;
@@ -51,48 +51,48 @@
 <body>
     <div id="logo">REWIND INDUSTRIES</div>
     <div id="vitals">
-		<div>PATIENT ID: OTM-2077</div>
+        <div>PATIENT ID: OTM-2077</div>
         <div>NAME: A. ALVAREZ</div>
         <div>HR: <span id="heartRate">72</span> bpm <canvas id="hrGraph" width="50" height="20"></canvas></div>
         <div>BP: <span id="bloodPressure">120/80</span> mmHg</div>
-		<div>O2: 98%</div>
+        <div>O2: 98%</div>
     </div>
     <div id="neuralStatus">
         <div>Quantum Neural Sync:</div>
         <div>Stable</div>
         <div>Crystal Interval Frequency:</div>
         <div>528 Hz</div>
-		<div>Oscillation Rate:</div>
-		<div>432 Hz</div>
+        <div>Oscillation Rate:</div>
+        <div>432 Hz</div>
         <div>Synaptic Resonance:</div>
         <div>Optimal</div>
         <div>Rewind Flux Capacitance:</div>
         <div>Nominal</div>
         <div>Neuroplasticity Rating:</div>
         <div>87%</div>
-		<div>Cherinkov Noise:</div>
+        <div>Cherinkov Noise:</div>
         <div>0.23%</div>
-		<div>Chronographic Interference:</div>
+        <div>Chronographic Interference:</div>
         <div>Low</div>
-		<div>Entropic Drift Index:</div>
-		<div>0.04</div>
-		<div>Synapse Load:</div>
-		<div>Nominal</div>
-		<div>Cognitive Latency:</div>
-		<div>12 ms</div>
-		<div>Time-Slip Factor:</div>
-		<div>Negligible</div>
-		<div>Temporal Variation:</div>
-		<div>&lt; n04</div>
-		<div>Static Cohesion:</div>
-		<div>100%</div>
-		<div>Upload Link:</div>
-		<div>2.34 EB/s</div>
+        <div>Entropic Drift Index:</div>
+        <div>0.04</div>
+        <div>Synapse Load:</div>
+        <div>Nominal</div>
+        <div>Cognitive Latency:</div>
+        <div>12 ms</div>
+        <div>Time-Slip Factor:</div>
+        <div>Negligible</div>
+        <div>Temporal Variation:</div>
+        <div>&lt; n04</div>
+        <div>Static Cohesion:</div>
+        <div>100%</div>
+        <div>Upload Link:</div>
+        <div>2.34 EB/s</div>
     </div>
     <canvas id="eegCanvas" width="800" height="600"></canvas>
     <script>
-        // Toggle switches (set to false to disable features)
-        const ENABLE_DYNAMIC_WAVES = true;
+        // Toggle switches
+        const ENABLE_DYNAMIC_WAVES = false;
         const ENABLE_INCREASED_CHANNELS = false;
         const ENABLE_COLORED_CHANNELS = true;
         const ENABLE_GLOW_EFFECT = true;
@@ -103,7 +103,7 @@
         const ENABLE_SCIFI_FONT = true;
         const ENABLE_ENHANCED_BURSTS = true;
 
-        // Apply sci-fi font if enabled
+        // Apply sci-fi font
         if (ENABLE_SCIFI_FONT) {
             document.body.classList.add('scifi-font');
         }
@@ -116,37 +116,40 @@
             document.getElementById('hrGraph').style.display = 'none';
         }
 
-        // Get canvas and context
+        // Canvas setup
         const canvas = document.getElementById('eegCanvas');
         const ctx = canvas.getContext('2d');
         const W = canvas.width;
         const H = canvas.height;
-        const N = ENABLE_INCREASED_CHANNELS ? 6 : 4; // Number of channels
+        const N = ENABLE_INCREASED_CHANNELS ? 6 : 4;
         const channelHeight = H / N;
-        const channelData = [];
 
-        // Initialize data arrays for each channel with zeros
+        // Circular buffer setup
+        const bufferSize = W;
+        const channelData = [];
+        const writeIndices = new Array(N).fill(0);
         for (let i = 0; i < N; i++) {
-            channelData[i] = new Array(W).fill(0);
+            channelData[i] = new Array(bufferSize).fill(0);
         }
 
         let t = 0;
-        const delta_t = 1 / 60; // Time step per frame (assuming ~60 fps)
-        const scale = 40; // Scaling factor for signal amplitude
+        const delta_t = 1 / 60;
+        const scale = 40;
+        const pixelsPerSecond = 100; // Controls scrolling speed (pixels per second)
 
-        // Enhanced randomness parameters
-        const random_duration = ENABLE_ENHANCED_BURSTS ? 0.2 : 0.15; // Duration of each random burst in seconds
-        let next_random_start = Math.random() * 1.5 + 0.5; // Initial start time between 0.5-2 seconds
+        // Randomness parameters
+        const random_duration = ENABLE_ENHANCED_BURSTS ? 0.2 : 0.15;
+        let next_random_start = Math.random() * 1.5 + 0.5;
         let is_random_active = false;
         let random_end_time = 0;
-        const base_noise_level = 0.2; // Constant background noise
-        const burst_noise_level = ENABLE_ENHANCED_BURSTS ? 1.0 : 0.8; // Noise during bursts
+        const base_noise_level = 0.2;
+        const burst_noise_level = ENABLE_ENHANCED_BURSTS ? 1.0 : 0.8;
 
         // Vitals parameters
         let heartRate = 72;
         let systolicBP = 120;
         let diastolicBP = 80;
-        let nextVitalUpdate = 2; // Update vitals every 2 seconds initially
+        let nextVitalUpdate = 2;
 
         // HR graph setup
         let hrGraphCanvas, hrCtx, hrData;
@@ -156,17 +159,22 @@
             hrData = new Array(50).fill(0);
         }
 
-        // Grid offset for dynamic grid
+        // Grid setup
         let gridOffset = 0;
+        const gridCanvas = document.createElement('canvas');
+        gridCanvas.width = W;
+        gridCanvas.height = H;
+        const gridCtx = gridCanvas.getContext('2d');
+        let lastGridOffset = -1;
 
-        // Function to get channel color
+        // Channel colors
         function getChannelColor(channel) {
             if (!ENABLE_COLORED_CHANNELS) return '#00ff00';
             const colorPalette = ['#00ff00', '#00ffff', '#ffff00', '#ff00ff', '#ff8000', '#8000ff', '#ff0080', '#0080ff'];
             return colorPalette[channel % colorPalette.length];
         }
 
-        // Function to generate EEG-like signal for each channel
+        // Generate EEG signal
         function getY(channel, t) {
             let f1 = 2 + channel;
             let f2 = 10 + channel * 2;
@@ -179,23 +187,21 @@
             return y;
         }
 
-        // Function to update vitals
+        // Update vitals
         function updateVitals() {
-            // Heart rate: 60-100 bpm
+            const heartRateSpan = document.getElementById('heartRate');
+            const bloodPressureSpan = document.getElementById('bloodPressure');
+
             heartRate = Math.round(heartRate + (Math.random() - 0.5) * 6);
             heartRate = Math.max(60, Math.min(100, heartRate));
-
-            // Blood pressure: Systolic 110-140, Diastolic 70-90
             systolicBP = Math.round(systolicBP + (Math.random() - 0.5) * 8);
             systolicBP = Math.max(110, Math.min(140, systolicBP));
             diastolicBP = Math.round(diastolicBP + (Math.random() - 0.5) * 6);
             diastolicBP = Math.max(70, Math.min(90, diastolicBP));
 
-            // Update DOM
-            document.getElementById('heartRate').textContent = heartRate;
-            document.getElementById('bloodPressure').textContent = `${systolicBP}/${diastolicBP}`;
+            heartRateSpan.textContent = heartRate;
+            bloodPressureSpan.textContent = `${systolicBP}/${diastolicBP}`;
 
-            // Update HR graph if enabled
             if (ENABLE_HR_GRAPH) {
                 hrData.shift();
                 hrData.push(heartRate);
@@ -211,30 +217,38 @@
             }
         }
 
-        // Draw the canvas content
+        // Draw grid to offscreen canvas
+        function drawGrid() {
+            gridCtx.fillStyle = 'black';
+            gridCtx.fillRect(0, 0, W, H);
+            gridCtx.strokeStyle = 'rgba(0, 255, 0, 0.1)';
+            for (let i = -20; i < W; i += 20) {
+                gridCtx.beginPath();
+                gridCtx.moveTo(i + gridOffset, 0);
+                gridCtx.lineTo(i + gridOffset, H);
+                gridCtx.stroke();
+            }
+            for (let i = -20; i < H; i += 20) {
+                gridCtx.beginPath();
+                gridCtx.moveTo(0, i + gridOffset);
+                gridCtx.lineTo(W, i + gridOffset);
+                gridCtx.stroke();
+            }
+        }
+
+        // Draw main canvas
         function draw() {
-            // Clear canvas with black background
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, W, H);
 
-            // Draw dynamic grid if enabled
+            if (ENABLE_DYNAMIC_GRID && gridOffset !== lastGridOffset) {
+                drawGrid();
+                lastGridOffset = gridOffset;
+            }
             if (ENABLE_DYNAMIC_GRID) {
-                ctx.strokeStyle = 'rgba(0, 255, 0, 0.1)';
-                for (let i = -20; i < W; i += 20) {
-                    ctx.beginPath();
-                    ctx.moveTo(i + gridOffset, 0);
-                    ctx.lineTo(i + gridOffset, H);
-                    ctx.stroke();
-                }
-                for (let i = -20; i < H; i += 20) {
-                    ctx.beginPath();
-                    ctx.moveTo(0, i + gridOffset);
-                    ctx.lineTo(W, i + gridOffset);
-                    ctx.stroke();
-                }
+                ctx.drawImage(gridCanvas, 0, 0);
             }
 
-            // Draw gray grid lines to separate channels
             ctx.strokeStyle = 'gray';
             ctx.lineWidth = 1;
             for (let i = 0; i <= N; i++) {
@@ -245,7 +259,6 @@
                 ctx.stroke();
             }
 
-            // Draw signal lines for each channel
             for (let channel = 0; channel < N; channel++) {
                 const midline = (channel + 0.5) * channelHeight;
                 if (ENABLE_GLOW_EFFECT) {
@@ -256,7 +269,8 @@
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
                 for (let x = 0; x < W; x++) {
-                    const y_data = channelData[channel][x];
+                    const bufferIndex = (writeIndices[channel] - W + x + bufferSize) % bufferSize;
+                    const y_data = channelData[channel][bufferIndex];
                     const y_canvas = midline - y_data * scale;
                     if (x === 0) {
                         ctx.moveTo(x, y_canvas);
@@ -271,9 +285,8 @@
             }
         }
 
-        // Update the data for the next frame
+        // Update data
         function update() {
-            // Manage randomness timing
             if (!is_random_active && t >= next_random_start) {
                 is_random_active = true;
                 random_end_time = t + random_duration;
@@ -286,30 +299,27 @@
 
             // Update signal data
             for (let channel = 0; channel < N; channel++) {
-                channelData[channel].shift(); // Remove oldest data point
                 let y = getY(channel, t);
-                // Add constant background noise
                 y += (Math.random() - 0.5) * base_noise_level;
                 if (is_random_active) {
-                    y += (Math.random() - 0.5) * burst_noise_level; // Add burst noise
+                    y += (Math.random() - 0.5) * burst_noise_level;
                 }
-                channelData[channel].push(y); // Add new data point
+                channelData[channel][writeIndices[channel]] = y;
+                writeIndices[channel] = (writeIndices[channel] + 1) % bufferSize;
             }
 
-            // Update grid offset if dynamic grid is enabled
             if (ENABLE_DYNAMIC_GRID) {
                 gridOffset += 0.5;
                 if (gridOffset >= 20) gridOffset -= 20;
             }
 
-            // Update vitals periodically
             if (t >= nextVitalUpdate) {
                 updateVitals();
-                const interval = ENABLE_FREQUENT_VITALS ? Math.random() * 1 + 1 : Math.random() * 2 + 2;
+                const interval = ENABLE_FREQUENT_VITALS ? 2 : 4;
                 nextVitalUpdate = t + interval;
             }
 
-            t += delta_t; // Increment time
+            t += delta_t;
         }
 
         // Animation loop
@@ -319,7 +329,6 @@
             requestAnimationFrame(animate);
         }
 
-        // Start the animation
         animate();
     </script>
 </body>
